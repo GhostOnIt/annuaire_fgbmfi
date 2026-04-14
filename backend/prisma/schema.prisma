@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  MEMBER
+  VISITOR
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  role      Role     @default(MEMBER)
+  member    Member?
+  reviews   Review[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Member {
+  id          String    @id @default(uuid())
+  userId      String    @unique
+  user        User      @relation(fields: [userId], references: [id])
+  firstName   String
+  lastName    String
+  photo       String?
+  phone       String?
+  email       String
+  whatsapp    String?
+  location    String?
+  description String?
+  chapterRole String?
+  isValidated Boolean   @default(false)
+  chapterId   String
+  chapter     Chapter   @relation(fields: [chapterId], references: [id])
+  sectorId    String
+  sector      Sector    @relation(fields: [sectorId], references: [id])
+  services    Service[]
+  reviews     Review[]
+  avgRating   Float     @default(0)
+  reviewCount Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Chapter {
+  id      String   @id @default(uuid())
+  name    String   @unique
+  city    String
+  members Member[]
+}
+
+model Sector {
+  id      String   @id @default(uuid())
+  name    String   @unique
+  members Member[]
+}
+
+model ChapterRole {
+  id   String @id @default(uuid())
+  name String @unique
+}
+
+model Service {
+  id          String  @id @default(uuid())
+  name        String
+  description String?
+  memberId    String
+  member      Member  @relation(fields: [memberId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  rating    Int
+  comment   String?
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  memberId  String
+  member    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([authorId, memberId])
+}
